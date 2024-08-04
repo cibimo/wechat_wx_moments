@@ -1,0 +1,37 @@
+<!DOCTYPE html>{% extends 'base.html' %}{% load static %}
+{% block htmlhead %}
+    <title>朋友圈历史查看</title>
+{% endblock %}
+{% block htmlbody %}
+    <br><br>
+    <div class="container" style="max-width: 95%">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">wxid</th>
+                    <th scope="col">昵称</th>
+                    <th scope="col">查看</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+        </table>
+        <script>
+            function gotoUser(wxid) {
+                window.location.href = '/user?wxid=' + encodeURIComponent(wxid);
+            }
+            var users = {% autoescape off %}{{ users }}{% endautoescape %};
+            var usersTableBody = document.getElementById("usersTableBody");
+
+            for (let user of users) {
+                usersTableBody.innerHTML += `
+                <tr>
+                    <th scope="row">${user.wxid.length<32?user.wxid:user.wxid.slice(0,32)+"..."}</th>
+                    <td>${user.nick.join("<br>")}</td>
+                    <td><a href="#" onclick="gotoUser('${user.wxid}')">点击前往</a></td>
+                </tr>
+                `
+            }
+        </script>
+
+    </div>
+{% endblock %}

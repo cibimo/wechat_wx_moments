@@ -1,0 +1,110 @@
+<!DOCTYPE html>{% extends 'base.html' %}{% load static %}
+{% block htmlhead %}
+    <title>朋友圈历史查看</title>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* creates 3 columns */
+            grid-gap: 10px; /* space between images */
+            margin-top: 10px;
+        }
+
+        .grid-container img {
+            width: 100%; /* makes images expand to fill their cell */
+            height: auto; /* maintain aspect ratio */
+        }
+
+    </style>
+{% endblock %}
+{% block htmlbody %}
+    <br><br>
+    <div class="container" style="max-width: 95%">
+        <h5>昵称列表：{{ nick }}</h5>
+        <br>
+        <div id="card-groups" class="row">
+            {% for moment in moments %}
+                <div class="col-sm-6 col-lg-4 mb-4">
+                    <div class="card">
+                        <div class="card-body" style="padding: 1rem;">
+                            {% if moment.text %}
+                                {{ moment.text }}
+                            {% endif %}
+                            {% if moment.url %}
+                                <a href="{{ moment.url }}">{{ moment.url }}</a>
+                            {% endif %}
+                            <div class="grid-container">
+                                {% for img in moment.image %}
+                                    <img loading="lazy" class="plus" src="{{ img }}">
+                                {% endfor %}
+                            </div>
+                            <br>
+                            <small style="float: right; color: gray">{{ moment.date }}</small>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- 弹窗部分代码 -->
+        <div id="outerdiv"
+             style="position:fixed;top:0;left:0;background:rgba(0,0,0,0.7);z-index:2;width:100%;height:100%;display:none;">
+            <div id="innerdiv" style="position:absolute;">
+                <img id="bigimg" style="border:5px solid #fff;" src=""/>
+            </div>
+        </div>
+        <!-- 弹窗部分代码 -->
+
+        <script>
+            var cardGroup = $('#card-groups').masonry()
+            cardGroup.imagesLoaded().progress(function () {
+                cardGroup.masonry('layout');
+            });
+            $(function () {
+                $(".plus").click(function () {
+                    var _this = $(this);//将当前的pimg元素作为_this传入函数
+                    imgShow("#outerdiv", "#innerdiv", "#bigimg", _this);
+                });
+            });
+
+            function imgShow(outerdiv, innerdiv, bigimg, _this) {
+                var src = _this.attr("src");//获取当前点击的pimg元素中的src属性
+                $(bigimg).attr("src", src);//设置#bigimg元素的src属性
+
+                /*获取当前点击图片的真实大小，并显示弹出层及大图*/
+                $("<img/>").attr("src", src).on('load', function () {
+                    var windowW = $(window).width();//获取当前窗口宽度
+                    var windowH = $(window).height();//获取当前窗口高度
+                    var realWidth = this.width;//获取图片真实宽度
+                    var realHeight = this.height;//获取图片真实高度
+                    var imgWidth, imgHeight;
+                    var scale = 0.95;//缩放尺寸，当图片真实宽度和高度大于窗口宽度和高度时进行缩放
+
+                    if (realHeight > windowH * scale) {//判断图片高度
+                        imgHeight = windowH * scale;//如大于窗口高度，图片高度进行缩放
+                        imgWidth = imgHeight / realHeight * realWidth;//等比例缩放宽度
+                        if (imgWidth > windowW * scale) {//如宽度扔大于窗口宽度
+                            imgWidth = windowW * scale;//再对宽度进行缩放
+                        }
+                    } else if (realWidth > windowW * scale) {//如图片高度合适，判断图片宽度
+                        imgWidth = windowW * scale;//如大于窗口宽度，图片宽度进行缩放
+                        imgHeight = imgWidth / realWidth * realHeight;//等比例缩放高度
+                    } else {//如果图片真实高度和宽度都符合要求，高宽不变
+                        imgWidth = realWidth;
+                        imgHeight = realHeight;
+                    }
+                    $(bigimg).css("width", imgWidth);//以最终的宽度对图片缩放
+
+                    var w = (windowW - imgWidth) / 2;//计算图片与窗口左边距
+                    var h = (windowH - imgHeight) / 2;//计算图片与窗口上边距
+                    $(innerdiv).css({"top": h, "left": w});//设置#innerdiv的top和left属性
+                    $(outerdiv).fadeIn("fast");//淡入显示#outerdiv及.pimg
+                });
+
+                $(outerdiv).click(function () {//再次点击淡出消失弹出层
+                    $(this).fadeOut("fast");
+                });
+            }
+
+        </script>
+    </div>
+{% endblock %}
